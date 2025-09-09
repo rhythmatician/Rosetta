@@ -1,2 +1,22 @@
 rosetta/config.toml
 .streamlit/secrets.toml
+*.pyc
+.venv/
+__pycache__/
+
+# Testing and development
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.log
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
