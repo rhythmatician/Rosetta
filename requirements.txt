@@ -8,3 +8,13 @@ networkx
 pyswisseph
 openpyxl
 watchdog
+bcrypt
+streamlit_authenticator
+streamlit>=1.33
+supabase
+python-dateutil
+psycopg2-binary
+email-validator
+pytz
+plotly>=5.0.0
+google-generativeai

@@ -169,12 +169,18 @@ def _detect_shapes_for_members(pos, members, parent_idx, sid_start, major_edges_
 
         specs = []
         for (x, y), asp in candidate_edges:
+            is_forced_approx = asp.endswith("_approx")
+            asp_clean = asp.replace("_approx", "")
+
             # Strict edge present in filtered master list?
-            if has_edge(x, y, asp):
+            if has_edge(x, y, asp_clean):
+                specs.append(((x, y), asp_clean))
+            # Allow explicitly provided approximate edges to pass through
+            elif is_forced_approx:
                 specs.append(((x, y), asp))
             # Otherwise, if we're in widen_orb mode, allow an approximate edge
-            elif has_edge_loose(x, y, asp, bonus=approx_bonus):
-                specs.append(((x, y), asp + "_approx"))
+            elif has_edge_loose(x, y, asp_clean, bonus=approx_bonus):
+                specs.append(((x, y), f"{asp_clean}_approx"))
 
         if not specs:
             return False
@@ -190,38 +196,120 @@ def _detect_shapes_for_members(pos, members, parent_idx, sid_start, major_edges_
     # SHAPE DETECTION LOGIC
     # (unchanged from your version; uses has_edge/add_once)
     # -----------------------
+    def aspect_ok(a, b, aspect, slack=0.75):
+        """Return True if the aspect exists or is very close within slack degrees."""
+        if has_edge(a, b, aspect):
+            return True
+
+        da = rep_pos.get(a, pos.get(a))
+        db = rep_pos.get(b, pos.get(b))
+        if da is None or db is None:
+            return False
+
+        angle = abs((da - db) % 360)
+        if angle > 180:
+            angle = 360 - angle
+
+        data = ASPECTS[aspect]
+        return abs(angle - data["angle"]) <= (data["orb"] + slack)
+
+    def aspect_ok(a, b, aspect, slack=0.75):
+        """Return True if the aspect exists or is very close within slack degrees."""
+        if has_edge(a, b, aspect):
+            return True
+
+        da = rep_pos.get(a, pos.get(a))
+        db = rep_pos.get(b, pos.get(b))
+        if da is None or db is None:
+            return False
+
+        angle = abs((da - db) % 360)
+        if angle > 180:
+            angle = 360 - angle
+
+        data = ASPECTS[aspect]
+        return abs(angle - data["angle"]) <= (data["orb"] + slack)
 
     # Envelope (5 nodes, chain of 4 Sextiles, with Oppositions and Trines)
     for quint in combinations(R, 5):
-        for perm in permutations(quint):
-            a, b, c, d, e = perm
-            if (has_edge(a, b, "Sextile") and has_edge(b, c, "Sextile") and
-                has_edge(c, d, "Sextile") and has_edge(d, e, "Sextile")):
+        opp_pairs = [
+            pair
+            for pair in combinations(quint, 2)
+            if aspect_ok(pair[0], pair[1], "Opposition")
+        ]
+        if len(opp_pairs) < 2:
+            continue
 
-                suppresses = {
-                    "Sextile Wedge": {frozenset([a, b, c]), frozenset([c, d, e])},
-                    "Kite": {frozenset([a, b, c, e]), frozenset([a, c, d, e])},
-                    "Cradle": {frozenset([a, b, c, d]), frozenset([b, c, d, e])},
-                    "Wedge": {
-                        frozenset([a, b, d]), frozenset([c, d, e]),
-                        frozenset([a, c, d]), frozenset([a, b, e]),
-                        frozenset([a, d, e]), frozenset([b, c, e]),
-                        frozenset([b, d, e]),
-                    },
-                }
-                keep = {
-                    "Sextile Wedge": {frozenset([b, c, d])},
-                    "Mystic Rectangle": {frozenset([a, b, d, e])},
-                    "Grand Trine": {frozenset([a, c, e])},
-                }
-                candidate_edges = [
-                    ((a, b), "Sextile"), ((b, c), "Sextile"),
-                    ((c, d), "Sextile"), ((d, e), "Sextile"),
-                    ((a, d), "Opposition"), ((b, e), "Opposition"),
-                    ((a, e), "Trine"), ((b, d), "Trine"),
-                ]
-                add_once("Envelope", (a, b, c, d, e), candidate_edges,
-                         {"suppress": suppresses, "keep": keep})
+        added = False
+        for opp1, opp2 in combinations(opp_pairs, 2):
+            if set(opp1) & set(opp2):
+                continue  # oppositions must be disjoint
+
+            center_candidates = set(quint) - set(opp1) - set(opp2)
+            if len(center_candidates) != 1:
+                continue
+
+            c = next(iter(center_candidates))
+
+            for pair_primary, pair_secondary in ((opp1, opp2), (opp2, opp1)):
+                for a, d in (pair_primary, pair_primary[::-1]):
+                    for b, e in (pair_secondary, pair_secondary[::-1]):
+                        sextile_specs = [
+                            ((a, b), "Sextile"),
+                            ((b, c), "Sextile"),
+                            ((c, d), "Sextile"),
+                            ((d, e), "Sextile"),
+                        ]
+                        if not all(has_edge(x, y, asp) for (x, y), asp in sextile_specs):
+                            continue
+
+                        diag_specs = []
+                        diag_checks = [
+                            ((a, d), "Opposition"),
+                            ((b, e), "Opposition"),
+                            ((a, e), "Trine"),
+                            ((b, d), "Trine"),
+                        ]
+                        valid_diag = True
+                        for (x, y), asp in diag_checks:
+                            if not aspect_ok(x, y, asp):
+                                valid_diag = False
+                                break
+                            label = asp if has_edge(x, y, asp) else f"{asp}_approx"
+                            diag_specs.append(((x, y), label))
+                        if not valid_diag:
+                            continue
+
+                        suppresses = {
+                            "Sextile Wedge": {frozenset([a, b, c]), frozenset([c, d, e])},
+                            "Kite": {frozenset([a, b, c, e]), frozenset([a, c, d, e])},
+                            "Cradle": {frozenset([a, b, c, d]), frozenset([b, c, d, e])},
+                            "Wedge": {
+                                frozenset([a, b, d]), frozenset([c, d, e]),
+                                frozenset([a, c, d]), frozenset([a, b, e]),
+                                frozenset([a, d, e]), frozenset([b, c, e]),
+                                frozenset([b, d, e]),
+                            },
+                        }
+                        keep = {
+                            "Sextile Wedge": {frozenset([b, c, d])},
+                            "Mystic Rectangle": {frozenset([a, b, d, e])},
+                            "Grand Trine": {frozenset([a, c, e])},
+                        }
+                        candidate_edges = sextile_specs + diag_specs
+                        add_once(
+                            "Envelope",
+                            (a, b, c, d, e),
+                            candidate_edges,
+                            {"suppress": suppresses, "keep": keep},
+                        )
+                        added = True
+                        break
+                    if added:
+                        break
+                if added:
+                    break
+            if added:
                 break
 
     # Grand Cross
@@ -246,21 +334,37 @@ def _detect_shapes_for_members(pos, members, parent_idx, sid_start, major_edges_
     # Mystic Rectangle
     for quad in combinations(R, 4):
         a, b, c, d = quad
-        if (has_edge(a, c, "Opposition") and has_edge(b, d, "Opposition") and
-            has_edge(a, b, "Sextile") and has_edge(c, d, "Sextile") and
-            has_edge(a, d, "Trine") and has_edge(b, c, "Trine")):
+        sextile_specs = [
+            ((a, b), "Sextile"),
+            ((c, d), "Sextile"),
+        ]
+        if not all(has_edge(x, y, asp) for (x, y), asp in sextile_specs):
+            continue
 
-            suppresses = {"Wedge": {
-                frozenset([a, b, c]), frozenset([a, b, d]),
-                frozenset([b, c, d]), frozenset([a, c, d]),
-            }}
-            candidate_edges = [
-                ((a, c), "Opposition"), ((b, d), "Opposition"),
-                ((a, b), "Sextile"), ((c, d), "Sextile"),
-                ((a, d), "Trine"), ((b, c), "Trine"),
-            ]
-            add_once("Mystic Rectangle", (a, b, c, d), candidate_edges,
-                     {"suppress": suppresses})
+        diag_checks = [
+            ((a, c), "Opposition"),
+            ((b, d), "Opposition"),
+            ((a, d), "Trine"),
+            ((b, c), "Trine"),
+        ]
+        diag_specs = []
+        valid_diag = True
+        for (x, y), asp in diag_checks:
+            if not aspect_ok(x, y, asp):
+                valid_diag = False
+                break
+            label = asp if has_edge(x, y, asp) else f"{asp}_approx"
+            diag_specs.append(((x, y), label))
+        if not valid_diag:
+            continue
+
+        suppresses = {"Wedge": {
+            frozenset([a, b, c]), frozenset([a, b, d]),
+            frozenset([b, c, d]), frozenset([a, c, d]),
+        }}
+        candidate_edges = sextile_specs + diag_specs
+        add_once("Mystic Rectangle", (a, b, c, d), candidate_edges,
+                 {"suppress": suppresses})
 
     # Cradle
     for quad in permutations(R, 4):
@@ -319,9 +423,24 @@ def _detect_shapes_for_members(pos, members, parent_idx, sid_start, major_edges_
     # Grand Trine
     for trio in combinations(R, 3):
         a, b, c = trio
-        if (has_edge(a, b, "Trine") and has_edge(b, c, "Trine") and has_edge(a, c, "Trine")):
-            candidate_edges = [((a, b), "Trine"), ((b, c), "Trine"), ((a, c), "Trine")]
-            add_once("Grand Trine", (a, b, c), candidate_edges)
+        tri_specs = [
+            ((a, b), "Trine"),
+            ((b, c), "Trine"),
+            ((a, c), "Trine"),
+        ]
+        valid_tri = True
+        candidate_edges = []
+        for (x, y), asp in tri_specs:
+            if has_edge(x, y, asp):
+                candidate_edges.append(((x, y), asp))
+            elif aspect_ok(x, y, asp):
+                candidate_edges.append(((x, y), f"{asp}_approx"))
+            else:
+                valid_tri = False
+                break
+        if not valid_tri:
+            continue
+        add_once("Grand Trine", (a, b, c), candidate_edges)
 
     # T-Square
     for trio in combinations(R, 3):
@@ -477,37 +596,81 @@ def detect_shapes(pos, patterns, major_edges_all):
                     add_special("Unnamed", [a, b, c], edges)
 
     # ⚡ Lightning Bolt collapse (after Unnameds exist)
-    unnamed_sets = [frozenset(s["members"]) for s in shapes if s["type"] == "Unnamed"]
+    unnamed_info = []
+    for s in shapes:
+        if s["type"] != "Unnamed":
+            continue
+        q_edge = None
+        square_edge = None
+        for (u, v), asp in s["edges"]:
+            if asp == "Quincunx":
+                q_edge = (u, v)
+            elif asp == "Square":
+                square_edge = (u, v)
 
-    for i in range(len(unnamed_sets)):
-        for j in range(i + 1, len(unnamed_sets)):
-            u1, u2 = unnamed_sets[i], unnamed_sets[j]
-            shared = u1 & u2
-            if len(shared) == 2:  # exactly two shared nodes
-                combined = u1 | u2
-                if len(combined) == 4:
-                    a, b, c, d = list(combined)
-                    if (aspect_match(a, b, "Square") and
-                        aspect_match(a, c, "Trine") and
-                        aspect_match(b, d, "Trine") and
-                        aspect_match(c, d, "Square") and
-                        aspect_match(a, d, "Quincunx")):
+        if not q_edge or not square_edge:
+            continue
 
-                        candidate_edges = [
-                            ((a, b), "Square"),
-                            ((a, c), "Trine"),
-                            ((b, d), "Trine"),
-                            ((c, d), "Square"),
-                            ((a, d), "Quincunx"),
-                        ]
+        q_endpoints = frozenset(q_edge)
 
-                        suppresses = {
-                            "suppress": {
-                                "Unnamed": {frozenset(u1), frozenset(u2)}
-                            }
-                        }
+        if square_edge[0] in q_endpoints and square_edge[1] not in q_endpoints:
+            q_node = square_edge[0]
+            extra = square_edge[1]
+        elif square_edge[1] in q_endpoints and square_edge[0] not in q_endpoints:
+            q_node = square_edge[1]
+            extra = square_edge[0]
+        else:
+            continue
 
-                        add_special("Lightning Bolt", [a, b, c, d], candidate_edges, suppresses)
+        unnamed_info.append({
+            "members": set(s["members"]),
+            "quincunx": q_endpoints,
+            "q_node": q_node,
+            "extra": extra,
+        })
+
+    for i in range(len(unnamed_info)):
+        for j in range(i + 1, len(unnamed_info)):
+            u1 = unnamed_info[i]
+            u2 = unnamed_info[j]
+
+            if u1["quincunx"] != u2["quincunx"]:
+                continue
+
+            if u1["q_node"] == u2["q_node"]:
+                continue
+
+            r1, r2 = u1["extra"], u2["extra"]
+            if r1 == r2:
+                continue
+
+            q1, q2 = u1["q_node"], u2["q_node"]
+
+            if not (aspect_match(q1, q2, "Quincunx") and
+                    aspect_match(q1, r1, "Square") and
+                    aspect_match(q2, r2, "Square") and
+                    aspect_match(q1, r2, "Trine") and
+                    aspect_match(q2, r1, "Trine")):
+                continue
+
+            candidate_edges = [
+                ((q1, r1), "Square"),
+                ((q1, r2), "Trine"),
+                ((q2, r1), "Trine"),
+                ((q2, r2), "Square"),
+                ((q1, q2), "Quincunx"),
+            ]
+
+            suppresses = {
+                "suppress": {
+                    "Unnamed": {
+                        frozenset(u1["members"]),
+                        frozenset(u2["members"]),
+                    }
+                }
+            }
+
+            add_special("Lightning Bolt", [q1, q2, r1, r2], candidate_edges, suppresses)
 
     # -------------------------------
     # approx pass
@@ -578,84 +741,36 @@ def detect_shapes(pos, patterns, major_edges_all):
     # -------------------------------
     # final sort + return
     # -------------------------------
-    shapes.sort(key=lambda s: (s.get("remainder", False), s["id"]))
-    return shapes
+    envelope_order = {}
+    desired_sequence = [
+        ("Envelope", 0),
+        ("Mystic Rectangle", 1),
+        ("Grand Trine", 2),
+        ("Sextile Wedge", 3),
+    ]
 
-    # -------------------------------
-    # approx pass
-    # -------------------------------
-    for parent_idx, mems in enumerate(patterns):
-        leftovers = set(mems) - used_members
-        if not leftovers:
+    for sh in shapes:
+        if sh["type"] != "Envelope":
             continue
-        s_here_approx, sid = _detect_shapes_for_members(
-            pos, leftovers, parent_idx, sid, major_edges_all, widen_orb=True
-        )
-        for sh in s_here_approx:
-            sh["approx"] = True
-            used_members.update(sh["members"])
-            for (u, v), asp in sh["edges"]:
-                used_edges.add((tuple(sorted((u, v))), asp))
-        shapes.extend(s_here_approx)
+        env_id = sh["id"]
+        env_key = ("Envelope", frozenset(sh["members"]))
+        envelope_order[env_key] = (env_id, 0)
 
-    # -------------------------------
-    # remainder pass (conjunction-aware)
-    # -------------------------------
-    for parent_idx, mems in enumerate(patterns):
-        if not mems:
-            continue
+        keep_map = sh.get("suppresses", {}).get("keep", {})
+        for shape_type, slot in desired_sequence[1:]:
+            for members in keep_map.get(shape_type, set()):
+                envelope_order[(shape_type, members)] = (env_id, slot)
 
-        # Collapse conjunctions for this parent
-        rep_pos, rep_map, rep_anchor = _cluster_conjunctions_for_detection(pos, list(mems))
-        members_set = set(rep_pos.keys())  # only use cluster reps
+    def sort_key(shape):
+        remainder_flag = shape.get("remainder", False)
+        key = (shape["type"], frozenset(shape["members"]))
+        if key in envelope_order:
+            env_id, slot = envelope_order[key]
+            return (remainder_flag, env_id, slot, shape["id"])
+        return (remainder_flag, shape["id"], 0, shape["id"])
 
-        remainders = []
-        for (u, v), asp in major_edges_all:
-            ru, rv = rep_anchor.get(u, u), rep_anchor.get(v, v)
-            if ru == rv:
-                continue  # ignore intra-cluster self-edge
-
-            edge_key = (tuple(sorted((ru, rv))), asp)
-            if (
-                edge_key not in used_edges
-                and ru in members_set
-                and rv in members_set
-            ):
-                remainders.append(((ru, rv), asp))
-
-        if remainders:
-            G = nx.Graph()
-            for (ru, rv), asp in remainders:
-                G.add_edge(ru, rv, aspect=asp)
-            for comp in nx.connected_components(G):
-                comp_edges = []
-                for ru, rv in G.subgraph(comp).edges():
-                    asp = G[ru][rv]["aspect"]
-                    comp_edges.append(((ru, rv), asp))
-                shapes.append({
-                    "id": sid,
-                    "type": "Remainder",
-                    "parent": parent_idx,
-                    "members": list(comp),
-                    "edges": comp_edges,
-                    "remainder": True,
-                })
-                sid += 1
-
-    # -------------------------------
-    # suppression
-    # -------------------------------
-    shapes = apply_suppression(shapes)
-
-    # -------------------------------
-    # final sort + return
-    # -------------------------------
-    shapes.sort(key=lambda s: (s.get("remainder", False), s["id"]))
+    shapes.sort(key=sort_key)
     return shapes
-
-# -------------------------------
-# Detect shapes (public API)
-# -------------------------------
 
 # -------------------------------
 # Aspect helpers
@@ -803,6 +918,24 @@ def _add_shape(shapes, sh_type, parent_idx, sid, node_list, edge_specs,
     if rep_anchor is not None:
         shape["rep_anchor"] = rep_anchor
     if suppresses is not None:
-        shape["suppresses"] = suppresses
+        expanded_suppresses = {}
+        for section in ("suppress", "keep"):
+            sec_map = suppresses.get(section)
+            if not sec_map:
+                continue
+            expanded_suppresses[section] = {}
+            for s_type, sets in sec_map.items():
+                expanded_sets = set()
+                for member_set in sets:
+                    members_expanded = []
+                    for n in member_set:
+                        if rep_map and n in rep_map:
+                            members_expanded.extend(rep_map[n])
+                        else:
+                            members_expanded.append(n)
+                    expanded_sets.add(frozenset(members_expanded))
+                expanded_suppresses[section][s_type] = expanded_sets
+        if expanded_suppresses:
+            shape["suppresses"] = expanded_suppresses
     shapes.append(shape)
     return sid + 1

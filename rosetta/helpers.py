@@ -135,18 +135,36 @@ def build_aspect_graph(pos):
                 break
     return list(nx.connected_components(G))
 
-def format_dms(value, is_latlon=False, is_decl=False, is_speed=False):
+def format_dms(value, is_latlon: bool = False, is_decl: bool = False, is_speed: bool = False):
     """Convert decimal degrees (or hours/day for speed) into DMS string with hemispheres."""
+    
+    PRIME = "′"
+    DOUBLE_PRIME = "″"
+
     try:
         val = float(value)
     except (TypeError, ValueError):
         return str(value)
 
     if is_speed:
+        is_negative = val < 0
+        val = abs(val)
+
         deg = int(val)
-        minutes = int((val - deg) * 60)
-        seconds = int(round(((val - deg) * 60 - minutes) * 60))
-        return f"{deg}°{minutes:02d}'{seconds:02d}\""
+        m_float = (val - deg) * 60
+        minutes = int(m_float)
+        seconds = int(round((m_float - minutes) * 60))
+
+        # normalize seconds -> minutes, minutes -> degrees
+        if seconds >= 60:
+            minutes += 1
+            seconds -= 60
+        if minutes >= 60:
+            deg += 1
+            minutes -= 60
+
+        body = f"{deg}°{minutes:02d}{PRIME}{seconds:02d}{DOUBLE_PRIME}"
+        return f"-{body}" if is_negative else body
 
     sign = ""
     if is_latlon or is_decl:
@@ -154,9 +172,19 @@ def format_dms(value, is_latlon=False, is_decl=False, is_speed=False):
         val = abs(val)
 
     deg = int(val)
-    minutes = int((val - deg) * 60)
-    seconds = int(round(((val - deg) * 60 - minutes) * 60))
-    return f"{deg}°{minutes:02d}'{seconds:02d}\" {sign}".strip()
+    m_float = (val - deg) * 60
+    minutes = int(m_float)
+    seconds = int(round((m_float - minutes) * 60))
+
+    # normalize seconds -> minutes, minutes -> degrees
+    if seconds >= 60:
+        minutes += 1
+        seconds -= 60
+    if minutes >= 60:
+        deg += 1
+        minutes -= 60
+
+    return f"{deg}°{minutes:02d}{PRIME}{seconds:02d}{DOUBLE_PRIME} {sign}".strip()
 
 SIGN_NAMES = [
     "Aries","Taurus","Gemini","Cancer","Leo","Virgo",
@@ -169,6 +197,15 @@ def format_longitude(lon):
     deg_in_sign = lon % 30
     deg = int(deg_in_sign)
     minutes = int(round((deg_in_sign - deg) * 60))
+
+    # normalize minutes carry
+    if minutes >= 60:
+        deg += 1
+        minutes -= 60
+        if deg >= 30:
+            deg -= 30
+            sign_index = (sign_index + 1) % 12
+
     return f"{SIGN_NAMES[sign_index]} {deg}°{minutes:02d}′"
 
 def calculate_oob_status(declination_str):

@@ -1,6 +1,221 @@
 # rosetta/lookup.py
 # CONSTANTS - All the lookup data in one place
 
+COLOR_EMOJI = {
+    "crimson": "🟥",
+    "teal": "🟦",
+    "darkorange": "🟧",
+    "slateblue": "🟪",
+    "seagreen": "🟩",
+    "hotpink": "🩷",
+    "gold": "🟨",
+    "deepskyblue": "🟦",
+    "orchid": "🟪",
+}
+
+ALIASES_MEANINGS = {
+    "ASC": "Ascendant",
+    "AC": "Ascendant",
+    "DSC": "Descendant",
+    "MC": "Midheaven",
+    "IC": "Imum Coeli",
+    "True Node": "North Node",
+    "Black Moon Lilith": "Lilith",
+}
+
+OBJECT_INTERPRETATIONS = {
+    # Axes & Points
+    "Ascendant": "The Identity Interface & body-OS bootloader",
+    "Descendant": "The Mirror Port for one-to-one contracts & co-regulation",
+    "MC": "The Public Interface & executive mission panel",
+    "IC": "The Root System & ancestral memory vault",
+    "True Node": "The Northbound Vector—evolutionary growth protocol",
+    "South Node": "The Ancestral Cache—purge/compost valve for over-learned patterns",
+    "Vertex": "The Fate Dock—improbable convergence node",
+    "Part of Fortune": "The Ease Circuit—low-friction throughput and natural gains",
+    "Black Moon Lilith (Mean)": "The Primal Sovereignty Field—boundary breaker & untamed voltage",
+
+    # Luminaries & Planets
+    "Sun": "The Core Reactor & mission kernel",
+    "Moon": "The Autonomic Regulator & memory tide",
+    "Mercury": "The Signal Router & cognitive codec",
+    "Venus": "The Attractor Engine & coherence field",
+    "Mars": "The Drive Actuator & ignition vector",
+    "Jupiter": "The Meaning Amplifier & growth protocol",
+    "Saturn": "The Constraint Architect, time-keeper, & form-governor",
+    "Uranus": "The Update Daemon & liberation current",
+    "Neptune": "The Dream Renderer & dissolution cloud",
+    "Pluto": "The Underworld Compiler & power transmuter",
+
+    # Healing, devotion, sovereignty
+    "Ceres": "The Nurture Protocol—cyclical provisioning & metabolic care",
+    "Pallas": "The Pattern-Recognition Engine—tactical design & creative strategy",
+    "Juno": "The Bond-Contract Manager—commitment format & loyalty spec",
+    "Vesta": "The Sacred Focus Kernel—devotional flame & consecrated attention",
+    "Lilith": "The Raw Sovereign Impulse—taboo breaker & reclamation surge",
+    "Chiron": "The Wound-into-Medicine Bridge—remediation key & apprenticeship path",
+
+    # Muses, arts, memory
+    "Iris": "The Spectrum Messenger—bridge-and-translate across bands",
+    "Hygiea": "The Sanitation Routine—detox scheduler & systems hygiene",
+    "Psyche": "The Deep-Sensing Kernel—bonding depth & intimacy decoder",
+    "Thalia": "The Levity Driver—resilience via wit & comedic reframing",
+    "Euterpe": "The Melodic Intake—breath-of-inspiration & lyrical flow",
+    "Pomona": "The Harvest Module—cultivation, ripeness, and stewardship",
+    "Polyhymnia": "The Devotional Channel—sacred rhetoric & potent silence",
+    "Harmonia": "The Coherence Balancer—conflict resolver & tonal tuning",
+    "Isis": "The Reassembly Protocol—sacred naming & wholeness restoration",
+    "Ariadne": "The Labyrinth Navigator—thread management & escape design",
+    "Mnemosyne": "The Ancestral Memory Vault—recall indexer & storykeeper",
+    "Echo": "The Reflection Loop—call-and-response mapper & resonance check",
+    "Niobe": "The Pride-Collapse Lesson—grief calculus & softening cue",
+    "Eurydike": "The Underworld Trust Test—retrieval boundary & consent line",
+    "Freia": "The Magnetic Allure Field—sovereignty barter & desire economy",
+    "Terpsichore": "The Kinetic Rhythm Driver—body-poetry and motion grammar",
+    "Minerva": "The Strategic Wisdom Stack—invention schematic & clear seeing",
+    "Hekate": "The Threshold Keyring—gate choice, liminal craft, and crossings",
+    "Zephyr": "The Gentle Tailwind—signal aeration & effortless drift",
+    "Kassandra": "The Unheeded Warning Flag—truth persistence amid noise",
+    "Lachesis": "The Timeline Allocator—scope limiter & lifespan apportioner",
+    "Nemesis": "The Overreach Corrector—consequences returning to balance",
+    "Medusa": "The Gorgon Shield—petrify-to-protect and gaze discipline",
+    "Aletheia": "The Disclosure Engine—truth-reveal toggle & clarity lock",
+    "Magdalena": "The Redemptive Devotion—eros-as-medicine & lineage healing",
+    "Arachne": "The Network Weaver—craft mastery & web-logic (hubris check)",
+    "Fama": "The Signal Amplifier—reputation wave & rumor dynamics",
+    "Eros": "The Desire Vector—life-force aim & attractive precision",
+    "Veritas": "The Integrity Seal—verification checksum & honesty clamp",
+
+    # Makers, rebels, risk
+    "Hidalgo": "The Outlaw Ethic—boundary testing & frontier justice",
+    "Sirene": "The Siren Call—magnetic lure & navigation of allure tests",
+    "Siva": "The Destruction-Creation Pulse—ascetic focus & renewal cycle",
+    "Lilith (Asteroid)": "The Embodied Rebel Muse—raw feminine actuator in form",
+    "Copernicus": "The Paradigm Pivot Engine—heliocentric reframe & model swap",
+    "Icarus": "The Risk-Altitude Gauge—ambition burn limit & heat handling",
+    "Toro": "The Raw Torque Channel—stamina, potency, and applied force",
+    "Apollo": "The Solar Artistry Beam—precision targeting & performance craft",
+    "Koussevitzky": "The Orchestration Lead—ensemble coordination & baton logic",
+    "Anteros": "The Reciprocity Circuit—love returned & mutuality check",
+    "Tezcatlipoca": "The Obsidian Mirror—shadow tracking & trickster resets",
+
+    # Transpersonal & mythic tech
+    "Varuna": "The Cosmic Lawwave—oath-keeping and fluid jurisdiction",
+    "West": "The Occidental Vector—dusk-phase transitions & endings craft",
+    "Bacchus": "The Ecstatic Release—fermentation, intoxication, and rite",
+    "Hephaistos": "The Forge Lab—smithing, prosthetics, and repair invention",
+    "Panacea": "The Universal Remedy Hypothesis—integrative fix attempts",
+    "Orpheus": "The Music-as-Spell—underworld diplomacy via song",
+    "Kafka": "The Metamorphosis Trigger—bureaucracy maze & surreal insight",
+    "Pamela": "The Image-Magic Conduit—tarot language & symbolic art channel",
+    "Dionysus": "The Ritual Intoxication—boundary dissolution & holy madness",
+    "Kaali": "The Serpent Current Monitor—kundalini surge & power handling",
+    "Asclepius": "The Clinical Healer Code—crisis medicine & precise repair",
+    "Nessus": "The Boundary-Violation Pattern—accountability switch & cycle break",
+    "Singer": "The Vocal Node—signature timbre antenna & songcraft focus",
+    "Angel": "The Messenger Light Node—protection ping & benevolent signal",
+    "Ixion": "The Second-Chance Engine—taboo breaker audit & redemption test",
+    "Typhon": "The Primordial Storm Generator—chaos fields & reset weather",
+    "Quaoar": "The Creation-Dance Coder—joyful order from primal noise",
+    "Sedna": "The Exile Wound Archive—slow-time sovereignty & oceanic depth",
+    "Orcus": "The Oath Ledger—underworld contracts & promise enforcement",
+    "Haumea": "The Crystalline Birth Matrix—rapid regeneration & lineage splitting",
+    "Eris": "The Disruption Catalyst—naming-rights challenger & schism maker",
+    "Makemake": "The Ritual Provisioner—island-ecology creativity & feast codes"
+}
+
+SHAPE_INSTRUCTIONS = {
+
+    "Wedge": (
+        "Three planets in a trine–sextile–opposition triangle. The opposition is the headline polarity; the third planet is the bridge. "
+        "It stabilizes one side via the trine (built-in ease) and integrates the other via the sextile (choose-in behaviors). "
+        "Lean on the trined planet first, then deliberately engage the sextiled planet to include the opposite pole. "
+        "Strengths: fast stabilization, clear routing for major life themes. Failure: comfort bias—overusing the trine and skipping the sextile. "
+        "Fix: name and practice the sextile behaviors until they’re native; send the output back across the axis to close the loop."
+    ),
+
+    "T-Square": (
+        "An opposition with a third planet squaring both ends as the apex. The axis supplies tension; the apex becomes the vector nozzle. "
+        "Drive it by balancing both sides of the axis, routing the charge through the apex as a craft (skills, protocols, roles) rather than reactivity. "
+        "Use the opposite point (phantom leg) as a pressure release. "
+        "Strengths: relentless focus, crisis competence, friction into results. "
+        "Failures: ping-ponging between poles, scapegoating/burning the apex. "
+        "Fixes: balance axis first, split apex workload into repeatable tasks, and touch the phantom leg often. "
+        "Transits: apex hits spike urgency; axis hits tempt polarization; phantom leg hits offer intense, chaotic upgrade portals—stay grounded."
+    ),
+
+    "Grand Cross": (
+        "Two oppositions locked in four squares—like guy lines pulling in all directions. Feels stabilizing when managed, but spins and launches when mismanaged. "
+        "Name both axes; rotate the four jobs in sequence; use center protocols to stop spin. "
+        "Strengths: unmatched endurance, load-sharing, sustained momentum. "
+        "Failures: burnout, paralysis, whiplash between corners. "
+        "Fixes: simple rotation rhythm, floor/ceiling limits, regular center resets. "
+        "Transits: any corner pulls the whole grid; axis hits amplify polarization; quadrant hits can open intense, chaotic upgrade portals—stay grounded."
+    ),
+
+    "Cradle": (
+        "An opposition held by two planets that each trine one outer and sextile the other. Functions like a support sling: tension contained by skillful braces. "
+        "Ease first (trines), then deliberate engagement (sextiles). Alternate braces to move charge safely across the axis. "
+        "Strengths: elegant mediation, continuous throughput, conflict into growth. "
+        "Failures: comfort-looping in the trines, rocking without delivery. "
+        "Fixes: name sextile actions, set steady cadence, keep direct axis check-ins. "
+        "Transits: outer hits intensify polarity, inner hits open intense, chaotic upgrade portals—stay grounded; trine hits add ease—convert to action."
+    ),
+
+    "Mystic Rectangle": (
+        "Two oppositions stitched by two parallel trines (rails) and two parallel sextiles (crossovers). Functions like a resonance membrane. "
+        "Trines carry tone, sextiles phase-match it, oppositions anchor the tension. Circulate in figure-eights: trine → sextile → opposition → sextile → trine. "
+        "Strengths: harmonic entrainment, conflict translation, constant motion without stall. "
+        "Failures: over-resonating with noise, dodging opposition work, spinning. "
+        "Fixes: install gain controls (time/dose/volume), name a reference tone, ground between passes. "
+        "Transits: opposition hits spike amplitude, trines boost flow, sextiles open intense, chaotic upgrade portals—stay grounded."
+    ),
+
+    "Grand Trine": (
+        "Three trines in a closed loop. Pure ease, low-friction throughput—gift and trap. Needs an external vector or it drifts into pretty motion with no delivery. "
+        "Set a clear aim, rotate leadership, and add edges on purpose (deadlines, constraints) to convert flow into results. "
+        "Strengths: efficiency, endurance, fast recovery. "
+        "Failures: autopilot, insularity, no follow-through. "
+        "Fixes: attach to a mission, calendar checkpoints, inject grounded tasks. "
+        "Transits: corner hits amplify flow; oppositions give temporary spine; squares can open intense, chaotic upgrade portals—stay grounded."
+    ),
+
+    "Kite": (
+        "A grand trine with a fourth planet opposing one corner and sextiling the other two. The trine is the airframe; the fourth planet is the spine. "
+        "Use the sextile wings to steer the trine’s lift toward the spine’s aim. "
+        "Strengths: high efficiency plus direction. "
+        "Failures: autopilot drift, chasing spine drama without sextile steering. "
+        "Fixes: set a flight plan, schedule sextile reps, alternate the wings. "
+        "Transits: spine hits demand aim, sextile hits open intense, chaotic upgrade portals—stay grounded, trine hits boost flow—revector through the spine."
+    ),
+
+    "Sextile Wedge": (
+        "One trine with a third planet sextiling both ends. Channels a native talent lane through a choice-activated apex. "
+        "Strengths: graceful productivity, fast learning, clean delivery. "
+        "Failures: coasting on trine with no outcomes, overusing one sextile. "
+        "Fixes: name apex tasks, schedule tiny reps, rotate both sextiles. "
+        "Transits: apex hits open intense, chaotic upgrade portals—stay grounded; trine hits boost flow—aim it; sextile hits highlight levers to balance."
+    ),
+
+    "Unnamed": (
+        "One trine, one square, one quincunx. A talent lane, a workbench, and a hazard. Function: convert the trine’s ease through the square into results—never cross the quincunx. "
+        "Always detour: trine → square → endpoint or reverse. "
+        "Strengths: precision, safe integration. "
+        "Failures: hotwiring the quincunx, scapegoating the square, whipsawing endpoints. "
+        "Fixes: publish square checklists, lock out the quincunx, pace work in short cycles. "
+        "Transits: quincunx hits = red alarm; square hits demand discipline; trine hits boost ease—route through the square."
+    ),
+
+    "Lightning Bolt": (
+        "Four planets in a square–trine–square–trine zig-zag with the endpoints quincunx. Two Unnamed triangles overlapped. "
+        "Use alternating switchback routes to go around the hazard. "
+        "Strengths: rapid rerouting, elegant conversion, built-in redundancy. "
+        "Failures: hotwiring the quincunx, overworking one adapter, drifting on trines. "
+        "Fixes: publish square checklists, alternate the switchbacks, ground between runs. "
+        "Transits: quincunx endpoints = red alarm, square hits spike workload, trine hits boost flow—aim it through an adapter. Dual adapter hits can open intense, chaotic upgrade portals—stay grounded."
+    ),
+}
+
 GLYPHS = {
     "Sun": "☉", "Moon": "☽", "Mercury": "☿", "Venus": "♀", "Mars": "♂",
     "Jupiter": "♃", "Saturn": "♄", "Uranus": "♅", "Neptune": "♆", "Pluto": "♇",
@@ -35,31 +250,154 @@ GROUP_COLORS = [
     "hotpink", "gold", "deepskyblue", "orchid"
 ]
 
+# Approximate emoji chips for GROUP_COLORS (works in widget labels)
+COLOR_EMOJI = {
+    "crimson": "🟥",
+    "teal": "🟦",
+    "darkorange": "🟧",
+    "slateblue": "🟪",
+    "seagreen": "🟩",
+    "hotpink": "🩷",
+    "gold": "🟨",
+    "deepskyblue": "🟦",
+    "orchid": "🟪",
+}
+
 OBJECT_MEANINGS = {
-    "AC": "The mask you wear and how others first see you.",
-    "Desc": "What you seek in relationships and partners.",
-    "True Node": "Your soul's growth direction in this life.",
-    "South Node": "Where you are coming from, past lives, your comfort zone, what you bring with you into this life, and where you go to purge and be reborn.",
-    "MC": "Your career, public life, and reputation.",
-    "IC": "Your home, family, roots, and inner emotional foundation.",
-    "Sun": "Your core identity, purpose, and life force.",
-    "Moon": "Your emotions, inner world, and instinctive needs.",
-    "Mercury": "Your mind, communication style, and how you think.",
-    "Venus": "How you love, attract, and experience beauty.",
-    "Mars": "How you act, assert yourself, and pursue desires.",
-    "Jupiter": "Your growth path, optimism, and what expands you.",
-    "Saturn": "Your responsibilities, discipline, and long-term lessons.",
-    "Uranus": "Your uniqueness, rebellion, and breakthroughs.",
-    "Neptune": "Your dreams, illusions, and spiritual longing.",
-    "Pluto": "Your power, transformations, and shadow work.",
-    "Ceres": "The nurturing instinct and cycles of giving and receiving.",
-    "Pallas": "Pattern recognition, creative intelligence, and tactics.",
-    "Juno": "What you need in committed partnerships.",
-    "Vesta": "Sacred focus, devotion, and spiritual flame.",
-    "Lilith": "Your raw feminine power, rebellion, and untamed self.",
-    "Chiron": "The deep wound you heal in others by healing yourself.",
-    "Vertex": "A fated meeting point — unexpected turning points.",
-    "Part of Fortune": "Where you find natural ease and success.",
+    # Axes & Points
+    "Ascendant": "How you show up at first glance—your identity, appearance, vibe, posture, and approach to life.",
+    "Descendant": 'What you seek and mirror in close partnerships, and how you relate to others or the archetypal "other"',
+    "MC": "Public role and trajectory—how your work, calling, and reputation take visible shape.",
+    "IC": "Roots and inner base—home, memory, ancestry, and what truly feels like ‘safe.’",
+    "North Node": "Growth direction—the stretch path that opens your future and matures your gifts. The highest and best version of you is in this direction.",
+    "South Node": "The natural strengths you bring into this life, your comfort zone, which you must draw from to achieve your North Node goals. It is also where you go to purge, reset, and be re-born.",
+    "Vertex": "Fated crossroads—encounters and plot twists that re-route your story.",
+    "Part of Fortune": "Your own personal rules for good fortune/luck. During Part of Fortune activations, your personal rules for magic (the Sabian Symbol for your PoF) are in charge of your life.",
+    "Black Moon Lilith": 'Sacred no and sovereign yes—your untamed edge, boundaries, and primal honesty. Lilith activations bring out the "AW HELL NAW" response, or deeply powerful feminine magnetism.',
+
+    # Luminaries & Planets
+    "Sun": "Core vitality and purpose/primary soul expression—what lights you up and fuels your mission.",
+    "Moon": "Emotional climate and instincts—how you self-soothe and stay nourished. The deeper emotional needs and feelings underlying soul expression.",
+    "Mercury": "Thinking and communication—how you learn, connect, and make meaning.",
+    "Venus": "Value, attraction, sensuality and harmony—what you value, what makes you comfortable and secure (both emotionally and physically), how you bond, value beauty, and build trust. Venus rules matters of money and possessions; all things value-related.",
+    "Mars": "Drive and courage—how you pursue, protect, and take decisive action. Mars is the get-up-and-go engine.",
+    "Jupiter": "Expansion/growth, philosophy and faith—where you expand, teach, and say a confident yes. Jupiter expands/amplifies everything he touches (via aspect, rulership, transit, etc.)",
+    "Saturn": "Time, structure and mastery—your boundaries, responsibilities, and earned authority. Saturn is the timekeeper of your life, and the authority who enforces your discipline.",
+    "Uranus": "Liberation, originality, rebellion, innovation and technology—your need for freedom, updates, and breakthroughs. Uranus brings major surprise disruptions to the status quo.",
+    "Neptune": "Imagination, dreams, spirituality, fantasies, and illusions—your dreamlife, compassion, and spiritual longing. Neptune rules both true and untrue spiritual visions and dreams, as well as the use of mind-altering substances.",
+    "Pluto": "The Underworld Journey: depth and regeneration, power, shadow work, soul retrieval, ancestral memory, and transformational truth. Pluto embodies the energy of intense constriction from all sides, forcing the skeletons out of the closet by turning life inside-out.",
+
+    # Healing, devotion, sovereignty
+    "Ceres": "Care cycles—feeding, tending, and the seasonal rhythm of give and receive. Ceres shows our relationship to nurturing ourselves and others; what kind of nurture we need as well as how we nurture the world.",
+    "Pallas": "X-Ray vision for seeing the inner workings of whatever it is connected to in the natal chart. Pattern intelligence—strategy, creative problem-solving, and elegant design. Pallas conjunct a natal planet brings high level tactical intelligence to that planet.",
+    "Juno": "Commitment style—loyalty, agreements, and what keeps bonds equitable. Juno indicates all things commitment, both in relationships and life pursuits. Keyword: Contracts.",
+    "Vesta": "Focused devotion—sacred attention, hearth fire, and purpose as practice. Vesta shows what you tend to day in and day out, as your most sacred flame.",
+    "Lilith": "Unfiltered self—refusing shame, reclaiming desire, and standing unowned.",
+    "Chiron": "Medicine through experience—your tender spot that becomes a gift to others. Chiron is often called the Wounded Healer. Your Chiron placement indicates your deepest wound, and as you go through that healing journey you become equipped to help others heal similar wounds.",
+
+    # Muses, arts, memory
+    "Iris": "Bridge-builder—translating between worlds, people, and color bands of meaning.",
+    "Hygiea": "Clean routines—hygiene, detox, and keeping systems simple and unclogged.",
+    "Psyche": "Soul sensitivity—bonding depth, intuition, and the courage to be seen within.",
+    "Thalia": "Lightness and humor—resilience through wit, play, and comic relief.",
+    "Euterpe": "Breath of music—lyric flow, melody, and mood-shaping through sound.",
+    "Pomona": "Harvest and stewardship—cultivation, ripeness, and tending what feeds life.",
+    "Polyhymnia": "Sacred voice—prayerful focus, silence as power, and devotional speech.",
+    "Harmonia": "Peacemaking—tuning relationships, smoothing conflict, and restoring balance.",
+    "Isis": "Re-membering wholeness—naming, mending, and honoring what was broken.",
+    "Ariadne": "Wayfinding—threads, maps, and staying oriented in complex mazes.",
+    "Mnemosyne": "Living archive—ancestral memory, storytelling, and recall that matters.",
+    "Echo": "Reflective resonance—mirroring, call-and-response, and listening that shapes speech.",
+    "Niobe": "Humbling pride—learning through loss, softening, and rehumanizing success.",
+    "Eurydike": "Trust at the threshold—tender retrievals, promises kept, and consent.",
+    "Freia": "Magnetism and worth—sovereign charm, valuables, and the art of receiving.",
+    "Terpsichore": "Movement as meaning—dance, rhythm, and expression through the body.",
+    "Minerva": "Calm clarity—craftsmanship, wise strategy, and elegant solutions.",
+    "Hekate": "Crossroads keeper—choice points, thresholds, and traveling with good keys.",
+    "Zephyr": "Gentle tailwinds—subtle support, easeful motion, and kinder pacing.",
+    "Kassandra": "Truth against odds—clear warnings, second sight, and staying with what’s real.",
+    "Lachesis": "Right-sizing—scope, pacing, and measuring what a season can hold.",
+    "Nemesis": "Rebalancing—natural consequences that restore proportion and fairness.",
+    "Medusa": "Protective gaze—defense of dignity, warding off harm, and righteous rage.",
+    "Aletheia": "Disclosure—honesty, clarity, and letting truth clean the air.",
+    "Magdalena": "Heartful devotion—erotic innocence, forgiveness, and love as remedy.",
+    "Arachne": "Master craft—skill, reputation, and webs that connect without trapping.",
+    "Fama": "Signal and story—news, reputation waves, and what carries your name.",
+    "Eros": "Life-aimed desire—magnetism, creative union, and sacred yes.",
+    "Veritas": "Integrity seal—accuracy, alignment, and promises you can stand on.",
+
+    # Makers, rebels, risk
+    "Hidalgo": "Frontier ethics—standing up to power and staking your own claim.",
+    "Sirene": "Calling and testing—irresistible songs, choice points, and steering by values.",
+    "Siva": "Destroy-to-renew—paring back to essence so new life can begin.",
+    "Lilith (Asteroid)": "Embodied rebel—living your no and yes without apology.",
+    "Copernicus": "Paradigm shift—seeing from a truer center and updating the model.",
+    "Icarus": "Heat management—ambition, altitude, and learning your safe burn range.",
+    "Toro": "Applied strength—endurance, potency, and steady, grounded force.",
+    "Apollo": "Spotlight craft—aimed excellence, artistry, and clean performance energy.",
+    "Koussevitzky": "Conductor’s touch—coordination, timing, and bringing parts into ensemble.",
+    "Anteros": "Reciprocal love—being loved back, mutuality, and earned devotion.",
+    "Tezcatlipoca": "Obsidian mirror—seeing shadow clearly and resetting the game board.",
+
+    # Transpersonal & mythic tech
+    "Varuna": "Big-water law—oaths, vast accountability, and currents that hold all boats.",
+    "West": "Sunset tone—closures, completions, and honoring the day’s last light.",
+    "Bacchus": "Fermented joy—celebration, loosening, and ritual release.",
+    "Hephaistos": "The forge—repair, invention, and tools that fit real hands.",
+    "Panacea": "Universal remedy impulse—integrating fixes and seeking the root cause.",
+    "Orpheus": "Song as spell—softening the hard places with music and mercy.",
+    "Kafka": "Strange wisdom—seeing through red tape and finding truth in the surreal.",
+    "Pamela": "Symbol craft—tarot-grade imagery, archetypes, and picture-language.",
+    "Dionysus": "Holy wild—ecstasy, boundary-melting, and sacred mischief.",
+    "Kaali": "Life-force surge—kundalini awareness and respectful power handling.",
+    "Asclepius": "Skilled healing—diagnosis, practice, and repair through craft.",
+    "Nessus": "Cycle break—naming harm, keeping lines clean, and ending abuse patterns.",
+    "Singer": "Voice node—signature tone, message delivery, and being heard.",
+    "Angel": "Protective messenger—kind interventions, guidance, and unseen help.",
+    "Ixion": "Second chances—taboo lessons, accountability, and redemption arcs.",
+    "Typhon": "Primordial weather—chaos cleanouts and storm-born clarity.",
+    "Quaoar": "Creation dance—playful order, culture-making, and new songs for life.",
+    "Sedna": "Oceanic depth—betrayal to sovereignty and slow, tidal healing.",
+    "Orcus": "Oath keeper—promises, consequences, and the weight of one’s word.",
+    "Haumea": "Fertile renewal—rapid regrowth, lineage blessings, and fresh starts.",
+    "Eris": "The journey through victimhood and empowerment: being oppressed, learning the truth of that oppression, learning to stand up for yourself, and eventually learning to stand up for others. The key is learning the truth behind the oppression and advocating out loud.",
+    "Makemake": "Provision and play—resourceful creativity and community feast codes."
+}
+
+OBJECT_MEANINGS_SHORT = {
+    # Axes & Points
+    "Ascendant": "House of Self — how you appear and begin things.",
+    "Descendant": "House of Others — partnerships and mirroring.",
+    "MC": "Public role, career, and reputation.",
+    "IC": "Home, roots, and inner foundation.",
+    "North Node": "Growth path and future direction.",
+    "South Node": "Comfort zone and past strengths.",
+    "Vertex": "Fated encounters and turning points.",
+    "Part of Fortune": "Your personal key to luck and flow.",
+    "Black Moon Lilith": "Raw boundaries and untamed power.",
+
+    # Luminaries & Planets
+    "Sun": "Core self and vitality.",
+    "Moon": "Emotions, instincts, and needs.",
+    "Mercury": "Mind, communication, and learning.",
+    "Venus": "Love, beauty, and values.",
+    "Mars": "Drive, action, and courage.",
+    "Jupiter": "Growth, luck, and expansion.",
+    "Saturn": "Discipline, limits, and mastery.",
+    "Uranus": "Change, freedom, and innovation.",
+    "Neptune": "Dreams, spirit, and illusions.",
+    "Pluto": "Power, shadow, and transformation.",
+
+    # Healing, devotion, sovereignty
+    "Ceres": "Nurturing and care cycles.",
+    "Pallas": "Wisdom, patterns, and strategy.",
+    "Juno": "Commitments and contracts.",
+    "Vesta": "Sacred focus and devotion.",
+    "Lilith": "Authenticity and defiance.",
+    "Chiron": "Wounding and healing gift.",
+    "Eros": "Desire and creative spark.",
+    "Psyche": "Soul, bonds, and intuition.",
+    "Eris": "Disruption, truth, and empowerment.",
 }
 
 PLANETARY_RULERS = {
@@ -228,6 +566,118 @@ DIGNITIES = {
   }
 }
 
+ORDERED_OBJECTS_FOCUS = [
+    # Compass coordinates
+    "Ascendant","Descendant","MC","IC",
+    # Compass needle (use canonical node names; True Node is alias)
+    "North Node","South Node",
+    # Characters (+ Pluto, Eris)
+    "Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto","Eris",
+    # Moved up
+    "Ceres","Pallas","Juno","Vesta",
+    # Chiron before BML (Mean)
+    "Chiron","Black Moon Lilith (Mean)",
+    # Switches (before Personal Initiations)
+    "Part of Fortune","Vertex","Anti-Vertex","East Point",
+    # Personal Initiations (minus Chiron)
+    "Nessus","Ixion",
+    # Mythic Journeys (minus Pluto/Eris)
+    "Hidalgo","Varuna","Typhon","Quaoar","Sedna","Orcus","Haumea","Makemake",
+    # Instruments (remaining; “Lilith (Asteroid 1181)” → “Lilith (Asteroid)”)
+    "Iris","Hygiea","Psyche","Thalia","Euterpe","Pomona","Polyhymnia",
+    "Harmonia","Isis","Ariadne","Mnemosyne","Echo","Niobe","Eurydike","Freia","Terpsichore","Minerva",
+    "Hekate","Zephyr","Kassandra","Lachesis","Nemesis","Medusa","Aletheia","Magdalena","Arachne","Fama",
+    "Eros","Veritas","Sirene","Siva","Lilith (Asteroid)","Copernicus","Icarus","Toro","Apollo",
+    "Koussevitzky","Osiris","Lucifer","Anteros","Tezcatlipoca","West","Bacchus","Hephaistos","Panacea",
+    "Orpheus","Kafka","Pamela","Dionysus","Kaali","Asclepius","Singer","Angel",
+]
+
+CATEGORY_MAP = {
+    "Character Profiles": {"Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune"},
+    "Instruments": {
+        "Ceres","Pallas","Juno","Vesta","Iris","Hygiea","Psyche","Thalia","Euterpe","Pomona","Polyhymnia",
+        "Harmonia","Isis","Ariadne","Mnemosyne","Echo","Niobe","Eurydike","Freia","Terpsichore","Minerva",
+        "Hekate","Zephyr","Kassandra","Lachesis","Nemesis","Medusa","Aletheia","Magdalena","Arachne","Fama",
+        "Eros","Veritas","Sirene","Siva","Lilith (Asteroid 1181)","Copernicus","Icarus","Toro","Apollo",
+        "Koussevitzky","Osiris","Lucifer","Anteros","Tezcatlipoca","West","Bacchus","Hephaistos","Panacea",
+        "Orpheus","Kafka","Pamela","Dionysus","Kaali","Asclepius","Singer","Angel"
+    },
+    "Personal Initiations": {"Chiron","Nessus","Ixion"},
+    "Mythic Journeys": {"Pluto","Hidalgo","Varuna","Typhon","Quaoar","Sedna","Orcus","Haumea","Eris","Makemake"},
+    "Compass Coordinates": {"Ascendant","Descendant","MC","IC"},
+    "Compass Needle": {"True Node","North Node","South Node"},
+    "Switches": {"Black Moon Lilith (Mean)","Part of Fortune","Vertex","Anti-Vertex","East Point"},
+    "Imprints": {"Fixed Stars"}
+} 
+
+CATEGORY_INSTRUCTIONS = {
+    "Character Profiles": "Treat these as the primary agents. They have will, drive, and personality. Write their profiles as if they are characters acting within the chart’s system. They initiate, choose, and embody functions.",
+    "Instruments": "Treat these as auxiliary tools or implements. They do not act on their own but modify, equip, or flavor the Characters they are attached to. Interpret them as specialized add-ons that enhance or qualify expression.",
+    "Personal Initiations": "Treat these as threshold trials and initiatory guides. They mark points of personal wounding, apprenticeship, or rites of passage. Interpret them as initiations the native must undergo, often in embodied or psychological crisis form.",
+    "Mythic Journeys": "Treat these as terrains or landscapes. They are collective-scale mythic journeys that reshape the native’s environment. Interpret them as deep fields of transformation that one must endure or traverse, not agents that act.",
+    "Compass Coordinates": "Treat these as orienting coordinate markers for the whole chart. They provide direction, aim, and framing. Interpret them as the chart’s compass points, describing location, presentation, public face, and roots.",
+    "Compass Needle": "Treat these as the chart’s directional polarity. They mark the karmic vector between where the native has come from and where they are growing toward. Interpret them as the navigational axis of soul trajectory.",
+    "Switches": "Treat these as sensitive toggles or thresholds. They activate, invert, or flip circuits. Interpret them as switches that trigger growth arcs, release conditions, or polarity shifts.",
+    "Imprints": "Treat these as permanent marks from the heavens. They stamp the chart with mythic inheritance, often conferring unusual talents or fated qualities. Interpret them as imprints that ‘hard-code’ certain powers or vulnerabilities into the native’s system.",
+}
+
+HOUSE_SYSTEM_INTERPRETATIONS = {
+    "equal": "Interpret Equal House as the Structural Schematic Layer—the body’s architectural blueprint and energetic grid.",
+    "placidus": "Interpret Placidus as the Narrative + Trauma Pattern Layer—the psychological time–body interface where memory scripts and emotional timelines run.",
+    "whole": "Interpret Whole Sign as the Archetypal + Mythic Layer—the symbolic field that immerses perception in prophecy, dream logic, and mythic meaning.",
+    "campanus": "Interpret Campanus as the Spatial Orientation + Visual Field Layer—the horizon-sphere translator that calibrates visual geometry and room-positioning.",
+    "koch": "Interpret Koch as the Causal Loop + Psychological Chronology Layer—the personalized clock of formative events and cause-effect echo loops.",
+    "regiomontanus": "Interpret Regiomontanus as the Ritual Orientation + Perceptual Direction Layer—the inner compass aligning perception to sacred vectors and cardinal points.",
+    "porphyry": "Interpret Porphyry as the Threshold Awareness + Gatekeeping Layer—the initiatory map of inner gates, liminal passages, and decision thresholds.",
+    "topocentric": "Interpret Topocentric as the Observer Body + Presence Field Layer—the live-feed interface of being seen/witnessed and arriving in the now-body.",
+    "alcabitius": "Interpret Alcabitius as the Status Identity + Role Projection Layer—the social scaffolding where external roles and masks are performed against mirrors."
+}
+
+HOUSE_INTERPRETATIONS = {
+    1: "Interpret the 1st House as the Identity Interface & body-OS bootloader.",
+    2: "Treat the 2nd House as the Resource Engine (value, stability, fuel routing).",
+    3: "View the 3rd House as the Local I/O Bus (nervous-system messaging, skill acquisition, neighborhood nodes).",
+    4: "Read the 4th House as the Root System & memory vault (home base, attachment roots, inner foundation).",
+    5: "Interpret the 5th House as the Creative Kernel & joy engine (self-expression, play, risk, generativity).",
+    6: "Treat the 6th House as the Service Lab & maintenance stack (craft, routines, soma-systems).",
+    7: "View the 7th House as the Mirror Port (one-to-one bonds, co-regulation, contracts).",
+    8: "Read the 8th House as the Deep-Merge Transformer (shared power, taboos, regeneration).",
+    9: "Interpret the 9th House as the Meaning-Making Array (exploration, worldview architecture, transmission).",
+    10: "Treat the 10th House as the Public Interface & executive panel (role, reputation, mission delivery).",
+    11: "View the 11th House as the Network Grid & future lab (alliances, movements, systems innovation).",
+    12: "Read the 12th House as the Subconscious Field & sanctuary (dreamwork, dissolution, hidden labs).",
+}
+
+HOUSE_MEANINGS = {
+    1: "House of Self & Identity",
+    2: "House of Money, Values & Work Routines",
+    3: "House of Communication, Local Neighborhood & Peers",
+    4: "House of Home, Family & Ancestry",
+    5: "House of Creativity, Pleasure & Children",
+    6: "House of Health & Daily Routines",
+    7: "House of Partnerships & Relationships with Others",
+    8: "House of Transformation & Shared Resources",
+    9: "House of Philosophy, Travel & Higher Learning",
+    10: "House of Career, Legacy & Public Life",
+    11: "House of Community & Friends",
+    12: "House of Spirituality, Institutions, & the Subconscious",
+}
+
+SIGN_MEANINGS = {
+    "Aries": "Sign of Action & Initiation",
+    "Taurus": "Sign of Stability & Sensation",
+    "Gemini": "Sign of Communication & Curiosity",
+    "Cancer": "Sign of Nurturing & Home",
+    "Leo": "Sign of Creativity & Expression",
+    "Virgo": "Sign of Service & Refinement",
+    "Libra": "Sign of Balance & Relationships",
+    "Scorpio": "Sign of Transformation & Depth",
+    "Sagittarius": "Sign of Exploration & Belief",
+    "Capricorn": "Sign of Ambition & Structure",
+    "Aquarius": "Sign of Innovation & Community",
+    "Pisces": "Sign of Imagination & Compassion",
+}
+
 ASPECT_INTERPRETATIONS = {
     "Trine": (
         "Complete, automatic connection and collaboration. "
@@ -248,10 +698,11 @@ ASPECT_INTERPRETATIONS = {
         "that complete the grand cross."
     ),
     "Conjunction": (
-        "Two or more planets that share the same perspective and location. "
-        "They work together as a singular node. If they are planets that naturally have a tense "
-        "relationship, such as Saturn and Uranus, then they can sometimes be tough roommates "
-        "together until the two archetypes are resolved into a working friendship."
+        "Planets/placements that share the same perspective and location, approaching life from the same place. "
+        "They combine their powers to form one node in the circuit together. If they are planets that"
+        "naturally have a tense relationship, such as Saturn and Uranus, then they can sometimes be tough"
+        "roommates until the two archetypes are resolved into a working friendship."
+        "When creating profile paragraphs, list the profiles for all placements within one conjunction cluster consecutively, even if that means repeating headers."
     ),
     "Opposition": (
         "The balance of opposites, like Yin and Yang. Each set of polarities is complementary, "
@@ -262,6 +713,7 @@ ASPECT_INTERPRETATIONS = {
         "or they compete, trying to dominate or control one another out of competition, superiority, or insecurity. "
         "All major oppositions in a natal chart represent the major over-arching themes of the native’s life. "
         "They are polarities that the native is always working to keep in balance, or their life goes out of balance."
+        "List them first when present with other aspects, and explain that the oppositions are the biggest life themes. "
     ),
     "Sesquisquare": (
         "Activation overflow. This is an aspect of momentum, compulsion, and often service. "
@@ -271,20 +723,23 @@ ASPECT_INTERPRETATIONS = {
         "and highly energetic. These are often 'helper circuits' or 'gift-wired compulsions,' "
         "where someone finds themselves acting or serving without even planning to, simply because "
         "the conditions are right for them to be 'in their element.' "
-        "They can be hijacked without good boundaries, but when integrated, "
-        "sesquisquares unlock multidimensional creativity and functional genius."
+        "They can be hijacked or manipulated without good boundaries, but when integrated, "
+        "sesquisquares unlock multidimensional creativity and functional genius. "
+        "Example: a teacher who cannot help but passionately teach when her area of expertise is mentioned. "
     ),
     "Quincunx": (
-        "A misaligned connection that demands adjustment. These planets feel like they should connect — "
-        "there’s tension and urgency — but the angles don’t support clean communication or mutual understanding. "
-        "This creates frustration, indecision, awkward compensations, or even complete disaster when pushed "
-        "against hard enough – until a new integration pathway is consciously invented. "
-        "It’s like trying to plug a round wire into a triangular socket. "
-        "You’re likely to fry or break something if you try too hard. "
-        "Quincunxes often signal health issues, compulsions that always seem to go badly, "
-        "patterns of bad luck, repeated disaster/trauma signatures, or parts of self that never seem to belong… "
-        "until the chart holder invents a whole new framework to hold them."
-    ),
+        "Hard misalignment—treat as a red-wire/black-wire hazard. Do NOT connect directly. "
+        "These are two points that feel extremely tempted to connect directly, like an itch that can't be directly scratched."
+        "Forcing contact causes arc, blowouts, symptom cascades, heartbreak, betrayal, failure, and general regrets. "
+        "Protocol: GO AROUND. Design an indirect route through non-quincunx links "
+        "(trine/sextile/square/sesquisquare/semisextile or a conjunction chain) that converts A’s output into "
+        "B’s input via adapters—clear skills, environments, or intermediaries. "
+        "The urgency you feel is noise; slow down, build the adapter, then pass the signal. "
+        "If the current placements and aspects shown do not provide resolution to re-route the quincunx, "
+        "tell the user that other placements not included in this interpretation will be needed to bridge the disconnect."
+        "Quincunxes mark injury loops and chronic misfires when hotwired; used correctly, they enforce sound system design."
+    )
+
 }
 
 INTERPRETATION_FLAGS = {
